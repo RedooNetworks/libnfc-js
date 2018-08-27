@@ -23,8 +23,9 @@ NFCRelease::NFCRelease(Callback *cb, nfc_device *device)
 }
 
 void NFCRelease::Execute() {
-    while (nfc_initiator_target_is_present(_pnd, NULL) == 0)
+    while (nfc_initiator_target_is_present(_pnd, NULL) == 0) {
         usleep(50*1000);
+    }
 }
 
 void NFCRelease::HandleOKCallback() {

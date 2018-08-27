@@ -9,27 +9,37 @@ nfc.close();
 
 // Reader API:
 let nfcReader = new NFCReader();
-nfcReader.open("pn532_uart:/dev/tty.usbserial"); // or nfcReader.open(); to open the default device
+nfcReader.open(); // or nfcReader.open(conntring); to open the connstring's device
 
 nfcReader.poll(); // polls for the next card
-nfcReader.on('card', card => {
+nfcReader.on('card', async card => {
     console.log(card);
 
-    async function process() {
-        // Sending data:
-        // let result = await nfcReader.transceive(Buffer.from([0]));
-        // console.log(result);
+    // DATA COMMUNICATION PROTOCOL
+    try {
 
-        await nfcReader.release();
-        console.log('card released');
+        let data = Buffer.from('00a4040006112233445511', 'hex');
+        console.log("SELECT: ", data);
+        let result = await nfcReader.transceive(data, 2000);
+        console.log("Received: ", result);
 
-        nfcReader.poll(); // polls for the next card
+    } catch(e) {
+        console.error("Problem in transmitting data...", e);
     }
 
-    process();
+    // WAIT UNTIL CARD IS REMOVED
+    try {
+        await nfcReader.release();
+        console.log('card released');
+    } catch(e) {
+        console.error("Problem releasing card.", e);
+    }
+
+    // INFINITE LOOP
+    try {
+        await nfcReader.poll(); // polls for the next card
+    } catch(e) {
+        console.error("Problem polling... That sucks... We are dead..", e);
+    }
 });
 
-// triggered if polling has failed
-nfcReader.on('error', err => {
-    throw err;
-})

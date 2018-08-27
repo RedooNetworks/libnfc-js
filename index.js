@@ -14,28 +14,26 @@ class NFCReader extends EventEmitter {
     }
 
     close() {
-        return this.close();
+        return this._nfc.close();
     }
 
     transceive(data, timeout) {
-        if (timeout)
-            return Promise.fromCallback(cb => this._nfc.transceive(data, timeout, cb));
-        else
-            return Promise.fromCallback(cb => this._nfc.transceive(data, cb));
+        return Promise.fromCallback(cb => this._nfc.transceive(data, cb, timeout));
     }
 
     release() {
         return Promise.fromCallback(cb => this._nfc.release(cb));
     }
 
-    poll() {
-        return Promise.fromCallback(cb => this._nfc.poll(cb))
+    poll(polling) {
+        return Promise.fromCallback(cb => this._nfc.poll(cb, polling))
             .then(card => this.emit('card', card))
             .catch(e => {
-                if (e.message != "NFC_ECHIP" && e.message != "Unknown error")
-                    this.emit('error', e)
-                else
+                if (e.message == "NFC_ECHIP" || e.message == "Unknown error") { // If Timeout, just poll again
                     return this.poll();
+                } else {
+                    throw e; // Otherwise throw error further, as any other method do.
+                }
             });
     }
 }
@@ -43,4 +41,4 @@ class NFCReader extends EventEmitter {
 module.exports = {
     NFC: binding.NFC,
     NFCReader
-}
+};

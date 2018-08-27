@@ -17,22 +17,22 @@ using Nan::Error;
 
 using namespace std;
 
-NFCPoll::NFCPoll(Callback *cb, nfc_device *device)
-:AsyncWorker(cb), _pnd(device), _has_error(false) {
+NFCPoll::NFCPoll(Callback *cb, nfc_device *device, const int& polling)
+:AsyncWorker(cb), _pnd(device), _polling(polling), _has_error(false) {
 
 }
 
 void NFCPoll::Execute() {
-    const uint8_t uiPollNr = 2;
-    const uint8_t uiPeriod = 2;
-    const nfc_modulation nmModulations[5] = {
+    const uint8_t uiPollNr = 255;
+    const uint8_t uiPeriod = _polling > 0 && _polling <= 255 ? _polling : 2;
+    const size_t szModulations = 5;
+    const nfc_modulation nmModulations[szModulations] = {
         { .nmt = NMT_ISO14443A, .nbr = NBR_106 },
         { .nmt = NMT_ISO14443B, .nbr = NBR_106 },
         { .nmt = NMT_FELICA, .nbr = NBR_212 },
         { .nmt = NMT_FELICA, .nbr = NBR_424 },
         { .nmt = NMT_JEWEL, .nbr = NBR_106 },
     };
-    const size_t szModulations = 5;
     int res = 0;
 
     if ((res = nfc_initiator_poll_target(_pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &_nt))  <= 0) {
@@ -88,9 +88,9 @@ void NFCPoll::HandleOKCallback() {
       , Null()
     };
 
-    if(_has_error)
+    if(_has_error) {
         argv[0] = Error(_error.c_str());
-    else {
+    } else {
         Local<Object> obj = New<Object>();
 
         obj->Set(New("modulationType").ToLocalChecked(), New(GetModulationType(_nt)).ToLocalChecked());
