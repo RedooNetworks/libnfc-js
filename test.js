@@ -11,8 +11,8 @@ nfc.close();
 let nfcReader = new NFCReader();
 nfcReader.open(); // or nfcReader.open(conntring); to open the connstring's device
 
-nfcReader.poll(); // polls for the next card
-nfcReader.on('card', async card => {
+nfcReader.poll(1); // polls for the next card
+nfcReader.onCard(async card => {
     console.log(card);
 
     // DATA COMMUNICATION PROTOCOL
@@ -36,10 +36,6 @@ nfcReader.on('card', async card => {
     }
 
     // INFINITE LOOP
-    try {
-        await nfcReader.poll(); // polls for the next card
-    } catch(e) {
-        console.error("Problem polling... That sucks... We are dead..", e);
-    }
+    await nfcReader.poll(1); // polls for the next card
 });
 
