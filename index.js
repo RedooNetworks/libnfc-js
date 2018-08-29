@@ -45,10 +45,14 @@ class NFCReader {
     }
 
     close() {
+        console.log('Closing raw reader');
         this._isClosed = true;
         const result = this._nfc.close();
         if (!this._isPolling) {
+            console.log('Not polling! Closing immediately');
             this._onClosedCallback && this._onClosedCallback();
+        } else {
+            console.log('Polling... Wait it is done!');
         }
         return result;
     }
@@ -84,6 +88,7 @@ class NFCReader {
 
         return Promise.fromCallback(cb => this._nfc.poll(cb, modulations, polling))
             .then(card => {
+                console.log('Finised polling successfully!');
                 if (this._isClosed) {
                     this._onClosedCallback && this._onClosedCallback();
                 } else {
@@ -91,7 +96,9 @@ class NFCReader {
                 }
             })
             .catch(e => {
+                console.log('Finised polling with error!');
                 if (this._isClosed) {
+                    console.log('Raw reader was already closed!');
                     this._onClosedCallback && this._onClosedCallback();
                 } else if (e.message == "NFC_ECHIP" || e.message == "Unknown error") { // If Timeout, just poll again
                     return this.poll();
