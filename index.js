@@ -112,7 +112,7 @@ class NFCReader {
                     console.log('Raw reader was already closed!');
                     this._innerClose();
                 } else if (e.message == "NFC_ECHIP" || e.message == "Unknown error") { // If Timeout, just poll again
-                    return this.poll();
+                    return this.poll(modulations, polling);
                 } else {
                     throw e; // Otherwise throw error further, as any other method do.
                 }
