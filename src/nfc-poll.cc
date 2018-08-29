@@ -23,7 +23,7 @@ NFCPoll::NFCPoll(Nan::Callback *cb, nfc_device *device, nfc_modulation* modulati
 }
 
 void NFCPoll::Execute() {
-    const uint8_t uiPollNr = 0xFF;
+    const uint8_t uiPollNr = 40;
     const uint8_t uiPeriod = _polling > 0 && _polling <= 255 ? _polling : 2;
 
     int res = 0;

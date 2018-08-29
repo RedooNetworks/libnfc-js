@@ -31,6 +31,7 @@ class NFCReader {
         this._nfc = new binding.NFCReaderRaw();
         this._onCardCallback = undefined;
         this._onClosedCallback = undefined;
+        this._isClosing = false;
         this._isClosed = true;
         this._isPolling = false;
     }
@@ -40,21 +41,31 @@ class NFCReader {
             throw new Error("Trying to open an already opened NFC reader!");
         }
         const result = this._nfc.open();
+        this._isClosing = false;
         this._isClosed = false;
         return result;
     }
 
     close() {
         console.log('Closing raw reader');
-        this._isClosed = true;
-        const result = this._nfc.close();
+        this._isClosing = true;
+        this._isClosed = false;
+
         if (!this._isPolling) {
             console.log('Not polling! Closing immediately');
-            this._onClosedCallback && this._onClosedCallback();
+            this._innerClose();
         } else {
             console.log('Polling... Wait it is done!');
         }
-        return result;
+    }
+
+    _innerClose() {
+        this._nfc.close();
+
+        this._isClosing = false;
+        this._isClosed = true;
+
+        this._onClosedCallback && this._onClosedCallback();
     }
 
     transceive(data, timeout) {
@@ -89,17 +100,17 @@ class NFCReader {
         return Promise.fromCallback(cb => this._nfc.poll(cb, modulations, polling))
             .then(card => {
                 console.log('Finised polling successfully!');
-                if (this._isClosed) {
-                    this._onClosedCallback && this._onClosedCallback();
+                if (this._isClosed || this._isClosing) {
+                    this._innerClose();
                 } else {
                     this._onCardCallback && this._onCardCallback(card);
                 }
             })
             .catch(e => {
                 console.log('Finised polling with error!');
-                if (this._isClosed) {
+                if (this._isClosed || this._isClosing) {
                     console.log('Raw reader was already closed!');
-                    this._onClosedCallback && this._onClosedCallback();
+                    this._innerClose();
                 } else if (e.message == "NFC_ECHIP" || e.message == "Unknown error") { // If Timeout, just poll again
                     return this.poll();
                 } else {
