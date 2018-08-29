@@ -30,14 +30,17 @@ class NFCReader {
     constructor() {
         this._nfc = new binding.NFCReaderRaw();
         this._onCardCallback = undefined;
+        this._isClosed = true;
     }
 
     open() {
         return this._nfc.open();
+        this._isClosed = false;
     }
 
     close() {
         return this._nfc.close();
+        this._isClosed = true;
     }
 
     transceive(data, timeout) {
@@ -56,21 +59,20 @@ class NFCReader {
     }
 
     poll(modulations, polling) {
-        if (!modulations) {
-            modulations = [
-                { nmt: NFC_MODULATION_TYPE.NMT_ISO14443A, nbr: NFC_BAUD.NBR_106 },
-                { nmt: NFC_MODULATION_TYPE.NMT_ISO14443B, nbr: NFC_BAUD.NBR_106 },
-                { nmt: NFC_MODULATION_TYPE.NMT_FELICA, nbr: NFC_BAUD.NBR_212 },
-                { nmt: NFC_MODULATION_TYPE.NMT_FELICA, nbr: NFC_BAUD.NBR_424 },
-                { nmt: NFC_MODULATION_TYPE.NMT_JEWEL, nbr: NFC_BAUD.NBR_106 }
-            ]
+        if (!modulations || !modulations.length) {
+            throw new Error("Modulations array must be provided");
         }
 
         return Promise.fromCallback(cb => this._nfc.poll(cb, modulations, polling))
             .then(card => {
-                this._onCardCallback && this._onCardCallback(card);
+                !this._isClosed && this._onCardCallback && this._onCardCallback(card);
             })
             .catch(e => {
+                if (this._isClosed) {
+                    console.log("Polling failed because reader was closed!");
+                    return;
+                }
+
                 if (e.message == "NFC_ECHIP" || e.message == "Unknown error") { // If Timeout, just poll again
                     return this.poll();
                 } else {
