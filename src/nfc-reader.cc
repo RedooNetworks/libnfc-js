@@ -65,14 +65,56 @@ NAN_METHOD(NFCReader::Open) {
     info.GetReturnValue().Set(info.This());
 }
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+void UnwrapArray(v8::Local<v8::Array> jsArr, nfc_modulation* modulations_data, size_t* modulations_size) {
+    v8::Local<v8::String> nmtProp = Nan::New("nmt").ToLocalChecked();
+    v8::Local<v8::String> nbrProp = Nan::New("nbr").ToLocalChecked();
+
+    size_t arrayItemNb = MIN(jsArr->Length(), MAX_MODULATION_SIZE);
+
+    *modulations_size = 0;
+
+    for (size_t i = 0; i < arrayItemNb; i++) {
+        v8::Local<v8::Value> jsonObj = jsArr->Get(i);
+
+        if (!jsonObj->IsObject()) {
+            continue;
+        }
+
+        v8::MaybeLocal<v8::Value> nmtValue = Nan::Get(jsonObj->ToObject(), nmtProp);
+        v8::MaybeLocal<v8::Value> nbrValue = Nan::Get(jsonObj->ToObject(), nbrProp);
+
+        if (nmtValue.IsEmpty() || nbrValue.IsEmpty()) {
+            continue;
+        }
+
+        nfc_modulation modulation = { .nmt = NMT_ISO14443A, .nbr = NBR_106 };
+        modulation.nmt = (nfc_modulation_type)nmtValue.ToLocalChecked()->IntegerValue();
+        modulation.nbr = (nfc_baud_rate)nbrValue.ToLocalChecked()->IntegerValue();
+
+        modulations_data[(*modulations_size)++] = modulation;
+    }
+}
+
 NAN_METHOD(NFCReader::Poll) {
     HandleScope scope;
     NFCReader* device = ObjectWrap::Unwrap<NFCReader>(info.This());
-    
+
     Callback *callback = new Callback(info[0].As<Function>());
-    int polling = info.Length() == 2 && info[1]->IsNumber() ? info[1]->Uint32Value() : 2;
+
+    if (!info[1]->IsArray()) {
+        return Nan::ThrowError("Second parameter must be an array!");
+    }
+
+    v8::Local<v8::Array> jsModulationsArray = info[1].As<Array>();
+
+    nfc_modulation modulations_data[MAX_MODULATION_SIZE];
+    size_t modulations_size;
+    UnwrapArray(jsModulationsArray, modulations_data, &modulations_size);
+
+    int polling = info.Length() == 2 && info[2]->IsNumber() ? info[2]->Uint32Value() : 2;
     
-    AsyncQueueWorker(new NFCPoll(callback, device->_pnd, polling));
+    AsyncQueueWorker(new NFCPoll(callback, device->_pnd, modulations_data, modulations_size, polling));
 }
 
 NAN_METHOD(NFCReader::Release) {

@@ -1,6 +1,6 @@
 'use strict'
 
-const {NFC, NFCReader} = require('./index')
+const {NFC, NFCReader, NFC_MODULATION_TYPE, NFC_BAUD} = require('./index')
 
 // Core API:
 let nfc = new NFC();
@@ -11,7 +11,11 @@ nfc.close();
 let nfcReader = new NFCReader();
 nfcReader.open(); // or nfcReader.open(conntring); to open the connstring's device
 
-nfcReader.poll(1); // polls for the next card
+const modulations = [
+    { nmt: NFC_MODULATION_TYPE.NMT_ISO14443A, nbr: NFC_BAUD.NBR_106 }
+];
+
+nfcReader.poll(modulations); // polls for the next card
 nfcReader.onCard(async card => {
     console.log(card);
 
@@ -21,6 +25,16 @@ nfcReader.onCard(async card => {
         let data = Buffer.from('00a4040006112233445511', 'hex');
         console.log("SELECT: ", data);
         let result = await nfcReader.transceive(data, 2000);
+        console.log("Received: ", result);
+
+        data = Buffer.from('004000000400000cfa', 'hex');
+        console.log("SET ID: ", data);
+        result = await nfcReader.transceive(data, 2000);
+        console.log("Received: ", result);
+
+        data = Buffer.from('0050000004', 'hex');
+        console.log("GET ID: ", data);
+        result = await nfcReader.transceive(data, 2000);
         console.log("Received: ", result);
 
     } catch(e) {
@@ -36,6 +50,6 @@ nfcReader.onCard(async card => {
     }
 
     // INFINITE LOOP
-    await nfcReader.poll(1); // polls for the next card
+    await nfcReader.poll(modulations); // polls for the next card
 });
 

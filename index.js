@@ -6,6 +6,25 @@ function isFunction(functionToCheck) {
     return functionToCheck && typeof functionToCheck === "function";
 }
 
+const NFC_BAUD = Object.freeze({
+    NBR_UNDEFINED: 0,
+    NBR_106: 1,
+    NBR_212: 2,
+    NBR_424: 3,
+    NBR_847: 4
+});
+
+const NFC_MODULATION_TYPE = Object.freeze({
+    NMT_ISO14443A: 1,
+    NMT_JEWEL: 2,
+    NMT_ISO14443B: 3,
+    NMT_ISO14443BI: 4,
+    NMT_ISO14443B2SR: 5,
+    NMT_ISO14443B2CT: 6,
+    NMT_FELICA: 7,
+    NMT_DEP: 8
+});
+
 class NFCReader {
 
     constructor() {
@@ -36,8 +55,18 @@ class NFCReader {
         this._onCardCallback = onCardCallback;
     }
 
-    poll(polling) {
-        return Promise.fromCallback(cb => this._nfc.poll(cb, polling))
+    poll(modulations, polling) {
+        if (!modulations) {
+            modulations = [
+                { nmt: NFC_MODULATION_TYPE.NMT_ISO14443A, nbr: NFC_BAUD.NBR_106 },
+                { nmt: NFC_MODULATION_TYPE.NMT_ISO14443B, nbr: NFC_BAUD.NBR_106 },
+                { nmt: NFC_MODULATION_TYPE.NMT_FELICA, nbr: NFC_BAUD.NBR_212 },
+                { nmt: NFC_MODULATION_TYPE.NMT_FELICA, nbr: NFC_BAUD.NBR_424 },
+                { nmt: NFC_MODULATION_TYPE.NMT_JEWEL, nbr: NFC_BAUD.NBR_106 }
+            ]
+        }
+
+        return Promise.fromCallback(cb => this._nfc.poll(cb, modulations, polling))
             .then(card => {
                 this._onCardCallback && this._onCardCallback(card);
             })
@@ -53,5 +82,7 @@ class NFCReader {
 
 module.exports = {
     NFC: binding.NFC,
-    NFCReader
+    NFCReader,
+    NFC_BAUD,
+    NFC_MODULATION_TYPE
 };
