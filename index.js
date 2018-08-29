@@ -30,17 +30,26 @@ class NFCReader {
     constructor() {
         this._nfc = new binding.NFCReaderRaw();
         this._onCardCallback = undefined;
-        this._isOpened = false;
+        this._onClosedCallback = undefined;
+        this._isClosed = true;
+        this._isPolling = false;
     }
 
     open() {
-        this._isOpened = true;
+        if (!this._isClosed) {
+            throw new Error("Trying to open an already opened NFC reader!");
+        }
+        this._isClosed = false;
         return this._nfc.open();
     }
 
     close() {
-        this._isOpened = false;
-        return this._nfc.close();
+        this._isClosed = true;
+        const result = this._nfc.close();
+        if (!this._isPolling) {
+            this._onClosedCallback && this._onClosedCallback();
+        }
+        return result;
     }
 
     transceive(data, timeout) {
@@ -58,25 +67,39 @@ class NFCReader {
         this._onCardCallback = onCardCallback;
     }
 
+    onClosed(onClosedCallback) {
+        if (!isFunction(onClosedCallback)) {
+            throw new Error("The onClosed's argument must be a function!");
+        }
+        this._onClosedCallback = onClosedCallback;
+    }
+
     poll(modulations, polling) {
         if (!modulations || !modulations.length) {
             throw new Error("Modulations array must be provided");
         }
 
+        this._isPolling = true;
+
         return Promise.fromCallback(cb => this._nfc.poll(cb, modulations, polling))
             .then(card => {
-                this._isOpened && this._onCardCallback && this._onCardCallback(card);
+                if (this._isClosed) {
+                    this._onClosedCallback && this._onClosedCallback();
+                } else {
+                    this._onCardCallback && this._onCardCallback(card);
+                }
             })
             .catch(e => {
-                if (!this._isOpened) {
-                    return;
-                }
-
-                if (e.message == "NFC_ECHIP" || e.message == "Unknown error") { // If Timeout, just poll again
+                if (this._isClosed) {
+                    this._onClosedCallback && this._onClosedCallback();
+                } else if (e.message == "NFC_ECHIP" || e.message == "Unknown error") { // If Timeout, just poll again
                     return this.poll();
                 } else {
                     throw e; // Otherwise throw error further, as any other method do.
                 }
+            })
+            .finally(() => {
+                this._isPolling = false;
             });
     }
 }
