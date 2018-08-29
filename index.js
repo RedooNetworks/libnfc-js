@@ -47,15 +47,11 @@ class NFCReader {
     }
 
     close() {
-        console.log('Closing raw reader');
         this._isClosing = true;
         this._isClosed = false;
 
         if (!this._isPolling) {
-            console.log('Not polling! Closing immediately');
             this._innerClose();
-        } else {
-            console.log('Polling... Wait it is done!');
         }
     }
 
@@ -90,16 +86,15 @@ class NFCReader {
         this._onClosedCallback = onClosedCallback;
     }
 
-    poll(modulations, polling) {
+    poll(modulations, uiPollNr, uiPeriod) {
         if (!modulations || !modulations.length) {
             throw new Error("Modulations array must be provided");
         }
 
         this._isPolling = true;
 
-        return Promise.fromCallback(cb => this._nfc.poll(cb, modulations, polling))
+        return Promise.fromCallback(cb => this._nfc.poll(cb, modulations, uiPollNr, uiPeriod))
             .then(card => {
-                console.log('Finised polling successfully!');
                 if (this._isClosed || this._isClosing) {
                     this._innerClose();
                 } else {
@@ -107,12 +102,10 @@ class NFCReader {
                 }
             })
             .catch(e => {
-                console.log('Finised polling with error!');
                 if (this._isClosed || this._isClosing) {
-                    console.log('Raw reader was already closed!');
                     this._innerClose();
                 } else if (e.message == "NFC_ECHIP" || e.message == "Unknown error") { // If Timeout, just poll again
-                    return this.poll(modulations, polling);
+                    return this.poll(modulations, uiPollNr, uiPeriod);
                 } else {
                     throw e; // Otherwise throw error further, as any other method do.
                 }

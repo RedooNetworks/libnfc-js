@@ -15,7 +15,7 @@ const modulations = [
     { nmt: NFC_MODULATION_TYPE.NMT_ISO14443A, nbr: NFC_BAUD.NBR_106 }
 ];
 
-nfcReader.poll(modulations); // polls for the next card
+nfcReader.poll(modulations, 8, 3); // polls for the next card
 nfcReader.onCard(async card => {
     console.log(card);
 
@@ -50,6 +50,6 @@ nfcReader.onCard(async card => {
     }
 
     // INFINITE LOOP
-    await nfcReader.poll(modulations); // polls for the next card
+    nfcReader.poll(modulations, 8, 3); // polls for the next card
 });
 

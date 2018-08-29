@@ -17,14 +17,14 @@ using Nan::Error;
 
 using namespace std;
 
-NFCPoll::NFCPoll(Nan::Callback *cb, nfc_device *device, nfc_modulation* modulations_data, const size_t& modulations_size, const int& polling)
-:AsyncWorker(cb), _pnd(device), _modulations_size(modulations_size), _polling(polling), _has_error(false) {
+NFCPoll::NFCPoll(Nan::Callback *cb, nfc_device *device, nfc_modulation* modulations_data, const size_t& modulations_size, const uint8_t& uiPollNr, const uint8_t& uiPeriod)
+:AsyncWorker(cb), _pnd(device), _modulations_size(modulations_size), _uiPollNr(uiPollNr), _uiPeriod(uiPeriod), _has_error(false) {
     memcpy(_modulations_data, modulations_data, modulations_size * sizeof(nfc_modulation));
 }
 
 void NFCPoll::Execute() {
-    const uint8_t uiPollNr = 20;
-    const uint8_t uiPeriod = _polling > 0 && _polling <= 255 ? _polling : 2;
+    const uint8_t uiPollNr = _uiPollNr >= 0x01 && _uiPollNr <= 0xFF ? _uiPollNr : 20;
+    const uint8_t uiPeriod = _uiPeriod >= 0x01 && _uiPeriod <= 0x0F ? _uiPeriod : 2;
 
     int res = 0;
     if ((res = nfc_initiator_poll_target(_pnd, _modulations_data, _modulations_size, uiPollNr, uiPeriod, &_nt))  <= 0) {

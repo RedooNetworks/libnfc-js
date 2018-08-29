@@ -9,7 +9,7 @@
 
 class NFCPoll : public Nan::AsyncWorker {
     public:
-        NFCPoll(Nan::Callback *cb, nfc_device *device, nfc_modulation* modulations_data, const size_t& modulations_size, const int& polling);
+        NFCPoll(Nan::Callback *cb, nfc_device *device, nfc_modulation* modulations_data, const size_t& modulations_size, const uint8_t& uiPollNr, const uint8_t& uiPeriod);
 
         void Execute();
         void HandleOKCallback();
@@ -17,7 +17,8 @@ class NFCPoll : public Nan::AsyncWorker {
         nfc_device *_pnd;
         nfc_modulation _modulations_data[MAX_MODULATION_SIZE];
         size_t _modulations_size;
-        int _polling;
+        uint8_t _uiPollNr;
+        uint8_t _uiPeriod;
         bool _has_error;
         std::string _error;
         nfc_target _nt;
