@@ -39,8 +39,9 @@ class NFCReader {
         if (!this._isClosed) {
             throw new Error("Trying to open an already opened NFC reader!");
         }
+        const result = this._nfc.open();
         this._isClosed = false;
-        return this._nfc.open();
+        return result;
     }
 
     close() {
