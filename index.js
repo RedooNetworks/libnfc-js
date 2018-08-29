@@ -69,7 +69,6 @@ class NFCReader {
             })
             .catch(e => {
                 if (!this._isOpened) {
-                    console.log("Polling failed because reader was closed!");
                     return;
                 }
 
