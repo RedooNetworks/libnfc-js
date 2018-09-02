@@ -35,7 +35,10 @@ NAN_METHOD(NFCReader::Close) {
         nfc_close(device->_pnd);
     }
     
-    nfc_exit(device->_context);
+    if (device->_pnd != NULL) {
+        nfc_exit(device->_context);
+    }
+    
     info.GetReturnValue().Set(info.This());
 }
 
