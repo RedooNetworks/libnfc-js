@@ -65,11 +65,17 @@ class NFCReader {
     }
 
     transceive(data, timeout) {
-        return Promise.fromCallback(cb => this._nfc.transceive(data, cb, timeout));
+        return Promise.fromCallback(cb => this._nfc.transceive(data, cb, timeout))
+            .catch(e => {
+                throw new Error("Error while transceiving: " + e.message);
+            });
     }
 
     release() {
-        return Promise.fromCallback(cb => this._nfc.release(cb));
+        return Promise.fromCallback(cb => this._nfc.release(cb))
+            .catch(e => {
+                throw new Error("Error while releasing: " + e.message);
+            });
     }
 
     onCard(onCardCallback) {
@@ -107,7 +113,7 @@ class NFCReader {
                 } else if (e.message == "NFC_ECHIP" || e.message == "Unknown error") { // If Timeout, just poll again
                     return this.poll(modulations, uiPollNr, uiPeriod);
                 } else {
-                    throw e; // Otherwise throw error further, as any other method do.
+                    throw new Error("Error while polling: " + e.message);
                 }
             })
             .finally(() => {
