@@ -36,11 +36,11 @@ class NFCReader {
         this._isPolling = false;
     }
 
-    open() {
+    open(connstring) {
         if (!this._isClosed) {
             throw new Error("Trying to open an already opened NFC reader!");
         }
-        const result = this._nfc.open();
+        const result = this._nfc.open(connstring);
         this._isClosing = false;
         this._isClosed = false;
         return result;
