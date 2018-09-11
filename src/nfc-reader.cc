@@ -46,7 +46,7 @@ NAN_METHOD(NFCReader::Open) {
     HandleScope scope;
     NFCReader* device = ObjectWrap::Unwrap<NFCReader>(info.This());
     
-    if (info.Length() > 0) {
+    if (info.Length() > 0 && info[0]->IsString()) {
         nfc_connstring devicePath;
         String::Utf8Value utfPath(info[0]->ToString());
         snprintf(devicePath, sizeof devicePath, "%s", *utfPath);
