@@ -47,6 +47,10 @@ class NFCReader {
     }
 
     close() {
+        if (this._isClosed) {
+            return;
+        }
+
         this._isClosing = true;
         this._isClosed = false;
 

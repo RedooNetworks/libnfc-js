@@ -31,6 +31,10 @@ NAN_METHOD(NFCReader::Close) {
     HandleScope scope;
     NFCReader* device = ObjectWrap::Unwrap<NFCReader>(info.This());
     
+    if (!device->_opened) {
+        return;
+    }
+    
     if (device->_opened) {
         nfc_close(device->_pnd);
     }
@@ -38,6 +42,8 @@ NAN_METHOD(NFCReader::Close) {
     if (device->_pnd != NULL) {
         nfc_exit(device->_context);
     }
+    
+    device->_opened = false;
     
     info.GetReturnValue().Set(info.This());
 }
