@@ -48,6 +48,7 @@ class NFCReader {
 
     close() {
         if (this._isClosed) {
+            this._onClosedCallback && this._onClosedCallback();
             return;
         }
 
