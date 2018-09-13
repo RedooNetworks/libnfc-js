@@ -29,8 +29,11 @@ class NFCReader {
 
     constructor() {
         this._nfc = new binding.NFCReaderRaw();
+
         this._onCardCallback = undefined;
         this._onClosedResolve = undefined;
+        this._onClosedReject = undefined;
+
         this._isClosing = false;
         this._isClosed = true;
         this._isPolling = false;
@@ -47,13 +50,14 @@ class NFCReader {
     }
 
     close() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             if (this._isClosed) {
                 resolve();
                 return;
             }
 
             this._onClosedResolve = resolve;
+            this._onClosedReject = reject;
 
             this._isClosing = true;
             this._isClosed = false;
@@ -65,13 +69,16 @@ class NFCReader {
     }
 
     _deferredClose() {
-        this._nfc.close();
-
         this._isClosing = false;
         this._isClosed = true;
 
-        this._onClosedResolve();
-        this._onClosedResolve = undefined;
+        try {
+            this._nfc.close();
+
+            this._onClosedResolve();
+        } catch (e) {
+            this._onClosedReject(e);
+        }
     }
 
     transceive(data, timeout) {
