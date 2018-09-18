@@ -37,6 +37,8 @@ class NFCReader {
         this._isClosing = false;
         this._isClosed = true;
         this._isPolling = false;
+
+        this._stopWaitingReleasing = false;
     }
 
     open(connstring) {
@@ -89,10 +91,22 @@ class NFCReader {
     }
 
     release() {
+        this._stopWaitingReleasing = false;
+
         return Promise.fromCallback(cb => this._nfc.release(cb))
             .catch(e => {
-                throw new Error("Error while releasing: " + e.message);
+                if (e.message === "TIMEOUT") {
+                    if (!this._stopWaitingReleasing) {
+                        this.release();
+                    }
+                } else {
+                    throw new Error("Error while releasing: " + e.message);
+                }
             });
+    }
+
+    stopWaitingRelease() {
+        this._stopWaitingReleasing = true;
     }
 
     onCard(onCardCallback) {

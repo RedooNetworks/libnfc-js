@@ -22,9 +22,17 @@ NFCRelease::NFCRelease(Callback *cb, nfc_device *device)
 
 }
 
+#define LOOP_TRIES 10
+#define LOOP_SLEEP 100*1000
+
 void NFCRelease::Execute() {
+    int i = 0;
     while (nfc_initiator_target_is_present(_pnd, NULL) == 0) {
-        usleep(50*1000);
+        if (i++ >= LOOP_TRIES) {
+            this->SetErrorMessage("TIMEOUT");
+            break;
+        }
+        usleep(LOOP_SLEEP);
     }
 }
 
@@ -33,6 +41,16 @@ void NFCRelease::HandleOKCallback() {
 
     Local<Value> argv[] = {
         Null()
+    };
+
+    callback->Call(1, argv);
+}
+
+void HandleErrorCallback() {
+    HandleScope scope;
+
+    Local<Value> argv[] = {
+        Nan::New(this->ErrorMessage()).ToLocalChecked()
     };
 
     callback->Call(1, argv);
