@@ -10,6 +10,7 @@ class NFCRelease : public Nan::AsyncWorker {
 
         void Execute();
         void HandleOKCallback();
+        void HandleErrorCallback();
     private:
         nfc_device *_pnd;
 };

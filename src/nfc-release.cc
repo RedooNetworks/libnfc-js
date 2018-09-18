@@ -46,11 +46,11 @@ void NFCRelease::HandleOKCallback() {
     callback->Call(1, argv);
 }
 
-void HandleErrorCallback() {
+void NFCRelease::HandleErrorCallback() {
     HandleScope scope;
 
     Local<Value> argv[] = {
-        Nan::New(this->ErrorMessage()).ToLocalChecked()
+        New(this->ErrorMessage()).ToLocalChecked()
     };
 
     callback->Call(1, argv);
