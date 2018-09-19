@@ -43,6 +43,9 @@ nfcReader.onCard(async card => {
 
     // WAIT UNTIL CARD IS REMOVED
     try {
+        setTimeout(() => {
+            nfcReader.stopWaitingRelease();
+        }, 2000);
         await nfcReader.release();
         console.log('card released');
     } catch(e) {

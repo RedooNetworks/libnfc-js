@@ -22,7 +22,7 @@ NFCRelease::NFCRelease(Callback *cb, nfc_device *device)
 
 }
 
-#define LOOP_TRIES 10
+#define LOOP_TRIES 5
 #define LOOP_SLEEP 100*1000
 
 void NFCRelease::Execute() {

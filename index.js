@@ -97,7 +97,7 @@ class NFCReader {
             .catch(e => {
                 if (e.message === "TIMEOUT") {
                     if (!this._stopWaitingReleasing) {
-                        this.release();
+                        return this.release();
                     }
                 } else {
                     throw new Error("Error while releasing: " + e.message);
