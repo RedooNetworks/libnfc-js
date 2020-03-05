@@ -75,23 +75,31 @@ NAN_METHOD(NFCReader::Open) {
 }
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-void UnwrapArray(v8::Local<v8::Array> jsArr, nfc_modulation* modulations_data, size_t* modulations_size) {
+void UnwrapArray(v8::MaybeLocal<v8::Array> jsArrMayby, nfc_modulation* modulations_data, size_t* modulations_size) {
     v8::Local<v8::String> nmtProp = Nan::New("nmt").ToLocalChecked();
     v8::Local<v8::String> nbrProp = Nan::New("nbr").ToLocalChecked();
 
-    size_t arrayItemNb = MIN(jsArr->Length(), MAX_MODULATION_SIZE);
-
     *modulations_size = 0;
 
-    for (size_t i = 0; i < arrayItemNb; i++) {
-        v8::Local<v8::Value> jsonObj = jsArr->Get(i);
+	if (jsArrMayby.IsEmpty()) { // Exception occurs during function call
+	  // Do some clean up
+	  return; // Back to JavaScript and let it throw
+	}
 
+	v8::Local<v8::Array> jsArr	= jsArrMayby.ToLocalChecked();
+	
+    size_t arrayItemNb = MIN(jsArr->Length(), MAX_MODULATION_SIZE);
+
+    for (size_t i = 0; i < arrayItemNb; i++) {
+        v8::MaybeLocal<v8::Value> jsonObjMaybe = Nan::Get(jsArr, i);
+		v8::Local<v8::Value> jsonObj = jsonObjMaybe.ToLocalChecked();
+		
         if (!jsonObj->IsObject()) {
             continue;
         }
-
-        v8::MaybeLocal<v8::Value> nmtValue = Nan::Get(jsonObj->ToObject(Nan::GetCurrentContext()).FromMaybe(v8::MaybeLocal<v8::Value>()), nmtProp);
-        v8::MaybeLocal<v8::Value> nbrValue = Nan::Get(jsonObj->ToObject(Nan::GetCurrentContext()).FromMaybe(v8::MaybeLocal<v8::Value>()), nbrProp);
+		
+        v8::MaybeLocal<v8::Value> nmtValue = Nan::Get((Nan::To<v8::Object>(jsonObj)).ToLocalChecked(), nmtProp);
+        v8::MaybeLocal<v8::Value> nbrValue = Nan::Get((Nan::To<v8::Object>(jsonObj)).ToLocalChecked(), nbrProp);
 
         if (nmtValue.IsEmpty() || nbrValue.IsEmpty()) {
             continue;

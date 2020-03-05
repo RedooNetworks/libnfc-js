@@ -85,8 +85,8 @@ void NFCPoll::HandleOKCallback() {
     } else {
         Local<Object> obj = New<Object>();
 
-        obj->Set(New("modulationType").ToLocalChecked(), New(GetModulationType(_nt)).ToLocalChecked());
-        obj->Set(New("baudRate").ToLocalChecked(), New(GetBaudRate(_nt)).ToLocalChecked());
+        obj->Set(Nan::GetCurrentContext(), New("modulationType").ToLocalChecked(), New(GetModulationType(_nt)).ToLocalChecked());
+        obj->Set(Nan::GetCurrentContext(), New("baudRate").ToLocalChecked(), New(GetBaudRate(_nt)).ToLocalChecked());
         argv[1] = obj;
     }
 
