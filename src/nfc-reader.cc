@@ -121,8 +121,8 @@ NAN_METHOD(NFCReader::Poll) {
     size_t modulations_size;
     UnwrapArray(jsModulationsArray, modulations_data, &modulations_size);
 
-    uint8_t uiPollNr = info.Length() >= 2 && info[2]->IsNumber() ? info[2]->Uint32Value() : 20;
-    uint8_t uiPeriod = info.Length() >= 3 && info[3]->IsNumber() ? info[3]->Uint32Value() : 2;
+    uint8_t uiPollNr = info.Length() >= 2 && info[2]->IsNumber() ? info[2]->Int32Value(Nan::GetCurrentContext()).FromJust() : 20;
+    uint8_t uiPeriod = info.Length() >= 3 && info[3]->IsNumber() ? info[3]->Int32Value(Nan::GetCurrentContext()).FromJust() : 2;
 
     AsyncQueueWorker(new NFCPoll(callback, device->_pnd, modulations_data, modulations_size, uiPollNr, uiPeriod));
 }
@@ -144,7 +144,7 @@ NAN_METHOD(NFCReader::Transceive) {
     
     Callback *callback = new Callback(info[1].As<Function>());
     
-    int timeout = info.Length() == 3 && info[2]->IsNumber() ? info[2]->Uint32Value() : 1000;
+    int timeout = info.Length() == 3 && info[2]->IsNumber() ? info[2]->Int32Value(Nan::GetCurrentContext()).FromJust() : 1000;
     
     AsyncQueueWorker(new NFCTransceive(callback, device->_pnd, data, size, timeout));
 }
