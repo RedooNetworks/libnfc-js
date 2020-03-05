@@ -90,8 +90,8 @@ void UnwrapArray(v8::Local<v8::Array> jsArr, nfc_modulation* modulations_data, s
             continue;
         }
 
-        v8::MaybeLocal<v8::Value> nmtValue = Nan::Get(jsonObj->ToObject(Nan::GetCurrentContext()).FromMaybe(v8::Local<v8::String>()), nmtProp);
-        v8::MaybeLocal<v8::Value> nbrValue = Nan::Get(jsonObj->ToObject(Nan::GetCurrentContext()).FromMaybe(v8::Local<v8::String>()), nbrProp);
+        v8::MaybeLocal<v8::Value> nmtValue = Nan::Get(jsonObj->ToObject(Nan::GetCurrentContext()).FromMaybe(v8::MaybeLocal<v8::Value>()), nmtProp);
+        v8::MaybeLocal<v8::Value> nbrValue = Nan::Get(jsonObj->ToObject(Nan::GetCurrentContext()).FromMaybe(v8::MaybeLocal<v8::Value>()), nbrProp);
 
         if (nmtValue.IsEmpty() || nbrValue.IsEmpty()) {
             continue;
